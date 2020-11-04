@@ -1,0 +1,96 @@
+---
+title: "206 Assignment 3 Task 3"
+author: "Alex Gaynor"
+date: "11/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(kableExtra)
+library(lubridate)
+```
+
+## Exploring Urchins Data
+
+Here I explore data from the coastline near Santa Barbara about sea urchins.
+
+```{r, message = FALSE, warning = FALSE}
+urchins <- read.csv(here("data", "urchins.csv")) # read in data
+urchins_clean <- clean_names(urchins) # clean names
+```
+
+### Exploring Size Comparisons With Plots
+
+A histogram faceted by urchin type.
+
+```{r, message = FALSE, warning = FALSE}
+ggplot(urchins_clean, aes(x = size, fill = common_name)) +
+  geom_histogram() +
+  facet_wrap(~ common_name) +
+  xlab("Common Name") +
+  ylab("Size") +
+  theme(legend.position = "none")
+```
+
+A boxplot of urchin sizes by common name.
+
+```{r, message = FALSE, warning = FALSE}
+ggplot(urchins_clean, aes(x = common_name, y = size, fill = common_name)) +
+  geom_boxplot(legend = FALSE) +
+  xlab("Common Name") +
+  ylab("Size") +
+  theme(legend.position = "none")
+```
+
+Creating a table with measures of central tendency
+
+```{r, message = FALSE, warning = FALSE}
+# summarize summary statistics
+urchins_summary <- urchins_clean %>% 
+  group_by(common_name) %>% 
+  summarize(mean_size_cm = mean(size),
+            median_size_cm = median(size),
+            sd_size_cm = sd(size),
+            count = n())
+# place summary stats in a table with nice titles
+urchins_summary %>%
+  kable(col.names = c("Common Name",
+                    "Mean Size (cm)",
+                    "Median Size (cm)",
+                    "Standard Deviation",
+                    "Sample Size (n)")) %>%
+  kable_styling(full_width = FALSE, "hover")
+```
+
+The Red Urchins are larger than the Purple Urchins on average, by about 3cm. The standard deviation of Red Urchins is larger which means their measurements have a higher variance relative to the mean. This means the range of size for Red Urchins is larger.
+
+## Explore Purple Urchins
+
+
+```{r, message = FALSE, warning = FALSE}
+# Organize the Purple Urchins Data
+purple_urchins <- urchins_clean %>% 
+  filter(common_name == "Purple Urchin") %>%
+  mutate(date_new = mdy(date)) %>% 
+  mutate(year = year(date_new)) %>% 
+  mutate(site_full = case_when(
+    site == "NAPL" ~ "Naples Reef",
+    site == "AQUE" ~ "Arroyo Quemado Reef",
+    site == "CARP" ~ "Carpinteria Reef",
+    site == "MOHK" ~ "Mohawk Reef",
+    site == "IVEE" ~ "Isla Vista Reef"))
+# Place data in table
+purple_urchins_table <- purple_urchins %>% 
+  group_by(year) %>%
+  count(site_full)
+#Create graph of data
+ggplot(purple_urchins_table, aes(x = year, y = n, group = site_full, colour = site_full)) +
+  geom_line(size = 1, alpha = 0.6) +
+  scale_x_continuous(breaks = c(2008, 2012, 2016, 2020))
+  
+```
+
