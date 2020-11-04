@@ -1,0 +1,57 @@
+---
+title: "a3_task4_alex_gaynor"
+author: "Alex Gaynor"
+date: "11/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(kableExtra)
+library(lubridate)
+```
+
+## Manipulating the Urchin Data
+
+We read in the data
+
+```{r, message = FALSE, warning = FALSE}
+urchins <- read.csv(here("data", "urchins.csv")) # read in data
+urchins_clean <- clean_names(urchins) # clean names
+```
+
+Commence exploration
+ 
+```{r}
+# filter to just purple urchin measurements taken during January 2010
+purple_urchins_jan_2010 <- urchins_clean %>% 
+  filter(common_name == "Purple Urchin") %>%
+  mutate(date_new = mdy(date)) %>% 
+  mutate(year = year(date_new)) %>% 
+  mutate(month = month(date_new)) %>% 
+  filter(month == 1 & year == 2010)
+```
+ 
+ Some histograms faceted by treatment
+ 
+```{r}
+ggplot(purple_urchins_jan_2010, aes(x = size, fill = treatment)) +
+  geom_histogram(bins = 10) +
+  facet_wrap(~ treatment) +
+  xlab("Size") +
+  ylab("Count") +
+  theme(legend.position = "none")
+```
+ 
+```{r}
+ggplot(purple_urchins_jan_2010, aes(x = size))
+  # geom_qq_line() +
+  # # facet_wrap(~ treatment) +
+  # xlab("Size") +
+  # ylab("Count") +
+  # theme(legend.position = "none")
+```
+ 
