@@ -35,23 +35,60 @@ purple_urchins_jan_2010 <- urchins_clean %>%
   filter(month == 1 & year == 2010)
 ```
  
- Some histograms faceted by treatment
+Some histograms and QQ plots faceted by treatment
  
 ```{r}
+# create ggplot with the filtered data
 ggplot(purple_urchins_jan_2010, aes(x = size, fill = treatment)) +
   geom_histogram(bins = 10) +
   facet_wrap(~ treatment) +
   xlab("Size") +
   ylab("Count") +
   theme(legend.position = "none")
+# create qq plot with the filtered data
+ggplot(purple_urchins_jan_2010, aes(sample = size)) +
+  geom_qq() +
+  facet_wrap(~ treatment)
 ```
- 
+
+### Find summary statistics for each group
+
 ```{r}
-ggplot(purple_urchins_jan_2010, aes(x = size))
-  # geom_qq_line() +
-  # # facet_wrap(~ treatment) +
-  # xlab("Size") +
-  # ylab("Count") +
-  # theme(legend.position = "none")
+purple_urchins_jan_2010_summary <- purple_urchins_jan_2010 %>% 
+  group_by(treatment) %>% 
+  summarize(mean_size_cm = mean(size),
+            sd_size_cm = sd(size),
+            count = n())
+
+purple_urchins_jan_2010_summary %>%
+  kable(col.names = c("Treatment",
+                    "Mean Size (cm)",
+                    "Standard Deviation",
+                    "Sample Size (n)")) %>%
+  kable_styling(full_width = FALSE, "hover")
 ```
- 
+
+### Separate groups
+
+```{r}
+purple_urchins_jan_2010_c <- purple_urchins_jan_2010 %>% 
+  filter(treatment == "CONTROL") %>% 
+  pull(size)
+
+purple_urchins_jan_2010_a <- purple_urchins_jan_2010 %>% 
+  filter(treatment == "ANNUAL") %>% 
+  pull(size)
+```
+
+### Perform t-test of menas of treatment groups
+
+```{r}
+t.test(purple_urchins_jan_2010_c, purple_urchins_jan_2010_a)
+```
+
+### Discussion
+
+For this assessment, only Purple Urchins measured during January 2010 are included. Within this restriction, the mean size of urchins in the control group is 4.223 cm, which is 0.22 cm smaller than the mean size of urchins in the treatment area, which has a mean size of 4.448 cm. This difference is small, but still worth noting. There may be other factors to consider such as time of year, which may influence the measurements. 
+
+Evaluation of the data with a two sample t-test reveals a p-value of 0.14; there is a slight correlation between annual removal of giant kelp and larger mean size measurements, but not enough to be sure the mean of the samples collected describes different populations.
+
